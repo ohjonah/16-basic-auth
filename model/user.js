@@ -1,11 +1,11 @@
 'use strict';
 
+const crypto = require('crypto');
+const bcrypt = require('bcrypt');
+const jwt = require('jsonwebtoken');
 const mongoose = require('mongoose');
 const debug = require('debug')('cfgram:user');
-const bcrypt = require('bcrypt');
-const crypto = require('crypto');
 const createError = require('http-errors');
-const jwt = require('jsonwebtoken');
 const Promise = require('bluebird');
 
 const Schema = mongoose.Schema;
@@ -72,4 +72,4 @@ userSchema.methods.generateToken = function() {
   });
 };
 
-module.exports = mongoose.Schema('user', userSchema);
+module.exports = mongoose.model('user', userSchema);
