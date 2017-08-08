@@ -52,6 +52,14 @@ describe('Auth Routes', function() {
         });
       });
     });
+
+    describe('with an unregistered route', function() {
+      after( done => {
+        User.remove({})
+        .then( () => done())
+        .catch(done)
+      })
+    })
   });
 
   describe('GET: /api/signin', function() {
