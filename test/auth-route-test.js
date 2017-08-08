@@ -2,8 +2,6 @@
 
 const expect = require('chai').expect;
 const request = require('superagent');
-const mongoose = require('mongoose');
-const Promise = require('bluebird');
 const User = require('../model/user.js');
 
 require('../server.js');
@@ -31,9 +29,25 @@ describe('Auth Routes', function() {
         .send(exampleUser)
         .end((err, res) => {
           if (err) return done(err);
-          console.log('POST: /api/signup TOKEN:', res.text, '\n');
           expect(res.status).to.equal(200);
           expect(res.text).to.be.a('string');
+          done();
+        });
+      });
+    });
+
+    describe('with an invalid body', function() {
+      after( done => {
+        User.remove({})
+        .then( () => done())
+        .catch(done);
+      });
+
+      it('should return a 400', done => {
+        request.post(`${url}/api/signup`)
+        .send()
+        .end((err, res) => {
+          expect(res.status).to.equal(400);
           done();
         });
       });
@@ -64,9 +78,54 @@ describe('Auth Routes', function() {
         request.get(`${url}/api/signin`)
         .auth('exampleuser', '1234')
         .end((err, res) => {
-          console.log('signed in user:', this.tempUser);
-          console.log('GET: /api/signin TOKEN:', res.text);
           expect(res.status).to.equal(200);
+          done();
+        });
+      });
+    });
+
+    describe('user cannot be authenticated', function() {
+      beforeEach( done => {
+        let user = new User(exampleUser);
+
+        user.generatePasswordHash(exampleUser.password)
+        .then( user => user.save())
+        .then( user => {
+          this.tempUser = user;
+          done();
+        })
+        .catch(done);
+      });
+
+      afterEach( done => {
+        User.remove({})
+        .then( () => done())
+        .catch(done);
+      });
+
+      it('should return password required', done => {
+        request.get(`${url}/api/signin`)
+        .auth('exampleuser', '')
+        .end((err, res) => {
+          expect(res.status).equal(401);
+          done();
+        });
+      });
+
+      it('should return username required', done => {
+        request.get(`${url}/api/signin`)
+        .auth('', '1234')
+        .end((err, res) => {
+          expect(res.status).equal(401);
+          done();
+        });
+      });
+
+      it('msg should return invalid password', done => {
+        request.get(`${url}/api/signin`)
+        .auth('exampleuser', 'ABCDE')
+        .end((err, res) => {
+          expect(res.status).equal(401);
           done();
         });
       });

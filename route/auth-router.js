@@ -5,17 +5,19 @@ const debug = require('debug')('cfgram:auth-router');
 const Router = require('express').Router;
 const basicAuth = require('../lib/basic-auth-middleware.js');
 const User = require('../model/user.js');
+const createError = require('http-errors');
 
 const authRouter = module.exports = Router();
 
 authRouter.post('/api/signup', jsonParser, function(req, res, next) {
   debug('POST: /api/signup');
-  console.log('POST: req.body.password:', req.body.password);
+
+  if (Object.keys(req.body).length === 0) return next(createError(400, 'Bad Request'));
+
   let password = req.body.password;
   delete req.body.password;
 
   let user = new User(req.body);
-  console.log('POST: req.body:', req.body);
 
   user.generatePasswordHash(password)
   .then( user => user.save())
